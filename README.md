@@ -27,7 +27,7 @@ docker compose up -d db
 4. Smoke test
 
 ```bash
-./.venv/bin/python -m gmail_rule_parser.main
+./.venv/bin/python -m src.main
 ```
 
 ### Makefile shortcuts

@@ -1,0 +1,9 @@
+{
+  "name": "rule1",
+  "predicate": "All",
+  "conditions": [
+    { "field": "Received", "predicate": "LessThanDays", "value": "10" },
+    { "field": "From", "predicate": "Contains", "value": "agoda" }
+  ],
+  "actions": [{ "mark": "read" }, { "move": "INBOX" }]
+}

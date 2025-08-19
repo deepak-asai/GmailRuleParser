@@ -9,7 +9,6 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from .models import Base, Email
 
-
 def ensure_schema(engine: Engine) -> None:
     Base.metadata.create_all(bind=engine)
 

@@ -197,4 +197,3 @@ def upsert_emails(email_rows: Iterable[dict], batch_size: int = 1000) -> int:
     """
     db_service = DatabaseService()
     return db_service.upsert_emails(email_rows, batch_size)
-

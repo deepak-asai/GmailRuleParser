@@ -19,7 +19,6 @@ Predicate = Literal[
     "GreaterThanMonths",
 ]
 
-
 @dataclass(frozen=True)
 class Condition:
     field: FieldName
@@ -34,13 +33,7 @@ class Rule:
     actions: Dict[str, Optional[str]]
     name: Optional[str] = None
 
-
-@dataclass(frozen=True)
-class Ruleset:
-    rules: List[Rule]
-
-
-def load_rules_from_file(path: str) -> Ruleset:
+def load_rules_from_file(path: str) -> Rule:
     with open(path, "r") as f:
         data = json.load(f)
 

@@ -179,7 +179,7 @@ class DatabaseService:
         # Print the raw SQL query
         return query
     
-    def get_matching_emails(self, rule, offset: int = 0, limit: int = 20, include_processed: bool = True) -> List[Email]:
+    def get_matching_emails(self, rule, offset: int = 0, limit: int = 20) -> List[Email]:
         """
         Get emails matching rule conditions from database with pagination.
         
@@ -187,38 +187,12 @@ class DatabaseService:
             rule: Rule to match against
             offset: Number of records to skip (for pagination)
             limit: Maximum messages to fetch per page
-            include_processed: Whether to include emails that have already been processed
             
         Returns:
             List of Email objects matching the rule
         """
         with self.get_session() as session:
             query = self.build_database_query(session, rule)
-            
-            # Filter out processed emails if requested
-            if not include_processed:
-                query = query.filter(Email.processed_at.is_(None))
-            
             emails = query.offset(offset).limit(limit).all()
             return emails
-    
-    def mark_emails_as_processed(self, email_ids: List[int]) -> None:
-        """
-        Mark emails as processed by setting the processed_at timestamp.
-        
-        Args:
-            email_ids: List of email IDs to mark as processed
-        """
-        if not email_ids:
-            return
-            
-        with self.get_session() as session:
-            from datetime import datetime, timezone
-            current_time = datetime.now(timezone.utc)
-            
-            session.query(Email).filter(Email.id.in_(email_ids)).update(
-                {Email.processed_at: current_time},
-                synchronize_session=False
-            )
-            session.commit()
     

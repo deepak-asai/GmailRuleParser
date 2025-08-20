@@ -68,6 +68,7 @@ class GmailApiService:
         messages = results.get("messages", [])
         return (list(m["id"] for m in messages)), results.get("nextPageToken")
 
+    # TODO: Handle error scenarios like throttling, rate limiting, etc.
     def get_messages_for_rules_batch(self, message_ids: List[str]) -> Dict[str, Dict[str, Any]]:
         """
         Get messages in batch for rule processing.
@@ -163,6 +164,7 @@ class GmailApiService:
         )
         return created.get("id")
 
+    # TODO: Handle error scenarios like throttling, rate limiting, etc.
     def modify_message_labels(self, message_ids: List[str], add: List[str] | None = None, remove: List[str] | None = None) -> None:
         """
         Modify labels on messages.

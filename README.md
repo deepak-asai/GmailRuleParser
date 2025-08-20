@@ -9,14 +9,14 @@ git clone https://github.com/deepak-asai/GmailRuleParser.git
 cd GmailRuleParser
 ```
 
-3. Install virtual environment and dependencies
+3. Setup virtual environment and dependencies
 
 ```bash
 make venv
 make install
 ```
 
-4. Copy environment file and set appropriate DB values
+4. Copy environment file and set appropriate DB values iin .env file
 
 ```bash
 cp env.example .env
@@ -41,7 +41,7 @@ Follow these steps to set up Google API access:
 make up
 ```
 
-7. Create `rules.json` in root directory:
+7. Configure `rules.json` in src directory:
 
 ```json
 [{
@@ -109,17 +109,3 @@ Run all tests in the correct order to avoid mock interference:
 make test
 ```
 
-### Environment Configuration
-
-#### Local Development
-
-For local development, the application connects to the PostgreSQL database running in Docker.
-
-### Rules engine
-
-
-Run the processor:
-
-```bash
-./.venv/bin/python -m src.rule_processor_service rules.json --max 100
-```

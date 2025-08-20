@@ -16,7 +16,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 # Read-only scope is sufficient to list and read messages
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"]
 
-
 def _paths() -> tuple[str, str]:
     creds_path = os.getenv("GOOGLE_CREDENTIALS_FILE", os.path.join(os.getcwd(), "credentials.json"))
     token_path = os.getenv("GOOGLE_TOKEN_FILE", os.path.join(os.getcwd(), "token.json"))

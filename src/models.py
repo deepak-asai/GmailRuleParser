@@ -23,7 +23,6 @@ class Email(Base):
         Index("ix_emails_snippet_gin", "snippet", postgresql_using="gin", postgresql_ops={"snippet": "gin_trgm_ops"}),
         # B-tree indexes for equlaity searches
         Index("ix_emails_received_at", "received_at"),
-        Index("ix_emails_processed_at", "processed_at"),
         Index("ix_emails_subject_btree", "subject"),
         Index("ix_emails_from_address_btree", "from_address"),
         Index("ix_emails_to_address_btree", "to_address"),
@@ -43,7 +42,6 @@ class Email(Base):
     label_ids: Mapped[Optional[list[str]]] = mapped_column(JSON)
 
     received_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

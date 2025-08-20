@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy.engine import Engine
+from sqlalchemy import text
 
 from .config import get_settings
 from .db import create_engine_for_url
@@ -10,6 +11,12 @@ from .storage import ensure_schema
 
 def reset_database(engine: Engine) -> None:
     Base.metadata.drop_all(bind=engine)
+    
+    # Create pg_trgm extension for GIN trigram indexes
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
+        conn.commit()
+    
     Base.metadata.create_all(bind=engine)
 
 

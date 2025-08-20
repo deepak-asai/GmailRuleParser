@@ -6,7 +6,9 @@ from .config import get_settings
 from .db import create_engine_for_url, get_database_version
 from .gmail_api import get_gmail_service, list_message_ids_in_inbox, get_messages_for_rules_batch
 from .storage import upsert_emails
-from .constants import MAX_PAGES_TO_PROCESS
+
+MAX_PAGES_TO_PROCESS = 10
+MAX_RESULTS_PER_PAGE = 50
 
 def fetch_and_store_emails(engine):
     service = get_gmail_service()
@@ -14,7 +16,7 @@ def fetch_and_store_emails(engine):
     current_page = 0
     next_page_token = None
     while current_page < MAX_PAGES_TO_PROCESS:
-        message_ids, next_page_token = list_message_ids_in_inbox(service, next_page_token, max_results=50)
+        message_ids, next_page_token = list_message_ids_in_inbox(service, next_page_token, max_results=MAX_RESULTS_PER_PAGE)
         print(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
 
         # Fetch full messages in batch, then map to DB schema

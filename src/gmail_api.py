@@ -258,10 +258,9 @@ def mark_as_unread(service, message_ids: List[str]) -> None:
     modify_message_labels(service, message_ids, add=["UNREAD"])
 
 
-def move_message_to_label(service, message_id: str, label_name: str, remove_from_inbox: bool = True) -> None:
-    pass
-    # label_id = ensure_label_exists(service, label_name)
-    # remove_ids: List[str] = ["INBOX"] if remove_from_inbox else []
-    # modify_message_labels(service, message_id, add=[label_id], remove=remove_ids)
+def move_message_to_label(service, message_ids: List[str], label_name: str, remove_from_inbox: bool = True) -> None:
+    label_id = ensure_label_exists(service, label_name)
+    remove_ids: List[str] = ["INBOX"] if remove_from_inbox else []
+    modify_message_labels(service, message_ids, add=[label_id], remove=remove_ids)
 
 

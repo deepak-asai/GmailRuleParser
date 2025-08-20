@@ -53,6 +53,9 @@ class RuleProcessorService:
         """
         Process emails using database queries and apply rule actions.
         
+        Only processes emails that haven't been processed yet (processed_at is NULL).
+        After applying actions, marks emails as processed by setting processed_at timestamp.
+        
         Args:
             rule: Rule to apply to emails
             max_messages: Maximum messages to process per batch
@@ -64,14 +67,14 @@ class RuleProcessorService:
         total_processed = 0
         
         while True:
-            # Get matching emails from database with pagination
-            emails = self.db_service.get_matching_emails(rule, offset=offset, limit=max_messages)
+            # Get matching emails from database with pagination (only unprocessed emails)
+            emails = self.db_service.get_matching_emails(rule, offset=offset, limit=max_messages, include_processed=False)
             
-            logger.info(f"Found {len(emails)} messages matching rule conditions from database...")
+            logger.info(f"Found {len(emails)} unprocessed messages matching rule conditions from database...")
             
             # Break if no more emails to process
             if len(emails) == 0:
-                logger.info("No more emails matching rule conditions")
+                logger.info("No more unprocessed emails matching rule conditions")
                 break
             
             matching_message_ids = []
@@ -86,6 +89,9 @@ class RuleProcessorService:
             # Apply actions to matching messages
             if matching_message_ids:
                 self.apply_actions(matching_message_ids, rule.actions)
+                
+                # Mark emails as processed
+                self.db_service.mark_emails_as_processed(email_ids_to_mark)
             
             logger.info(f"Processed {len(emails)} emails")
             total_processed += len(emails)

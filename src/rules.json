@@ -4,7 +4,7 @@
     "predicate": "All",
     "conditions": [
       { "field": "From", "predicate": "Contains", "value": "zomato" },
-      { "field": "Received", "predicate": "LessThanDays", "value": 3 }
+      { "field": "Received", "predicate": "LessThanDays", "value": 6 }
     ],
     "actions": [{ "move": "zomato" }]
   },

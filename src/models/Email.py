@@ -15,16 +15,14 @@ class Email(Base):
     __tablename__ = "emails"
     __table_args__ = (
         UniqueConstraint("gmail_message_id", name="uq_emails_gmail_message_id"),
-        # GIN indexes for text-based searches (better for ILIKE '%pattern%')
+        # GIN indexes for text-based searches (better for ILIKE '%pattern%' and equality)
         Index("ix_emails_subject_gin", "subject", postgresql_using="gin", postgresql_ops={"subject": "gin_trgm_ops"}),
         Index("ix_emails_from_address_gin", "from_address", postgresql_using="gin", postgresql_ops={"from_address": "gin_trgm_ops"}),
         Index("ix_emails_to_address_gin", "to_address", postgresql_using="gin", postgresql_ops={"to_address": "gin_trgm_ops"}),
         Index("ix_emails_message_gin", "message", postgresql_using="gin", postgresql_ops={"message": "gin_trgm_ops"}),
-        # B-tree indexes for equlaity searches
+        # B-tree indexes for datetime and equality searches
         Index("ix_emails_received_at", "received_at"),
-        Index("ix_emails_subject_btree", "subject"),
-        Index("ix_emails_from_address_btree", "from_address"),
-        Index("ix_emails_to_address_btree", "to_address"),
+        Index("ix_emails_processed_at", "processed_at"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -40,6 +38,7 @@ class Email(Base):
     label_ids: Mapped[Optional[list[str]]] = mapped_column(JSON)
 
     received_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

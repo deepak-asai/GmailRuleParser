@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from typing import List
 
-from src.gmail_api_v2 import GmailApiService
+from src.gmail_api import GmailApiService
 from .rules import load_rules_from_file, Rule
 from .storage import DatabaseService
 

@@ -13,6 +13,22 @@ from .config import get_settings
 from .db import create_engine_for_url
 
 
+def singleton(cls):
+    """
+    Decorator to make a class a singleton.
+    Ensures only one instance of the class exists.
+    """
+    instances = {}
+    
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    
+    return get_instance
+
+
+@singleton
 class DatabaseService:
     """Service class for handling all database operations"""
     
@@ -21,13 +37,13 @@ class DatabaseService:
         settings = get_settings()
         self.engine = create_engine_for_url(settings.database_url)
     
-    def ensure_schema(self) -> None:
-        """Ensure database schema exists"""
-        Base.metadata.create_all(bind=self.engine)
-    
     def get_session(self) -> Session:
         """Get a new database session"""
         return Session(self.engine)
+    
+    def ensure_schema(self):
+        """Ensure database schema exists by creating all tables"""
+        Base.metadata.create_all(bind=self.engine)
     
     def upsert_emails(self, email_rows: Iterable[dict], batch_size: int = 1000) -> int:
         """
@@ -182,18 +198,3 @@ class DatabaseService:
             emails = query.offset(offset).limit(limit).all()
             return emails
     
-# Backward compatibility functions
-def ensure_schema(engine: Engine) -> None:
-    """Ensure database schema exists (backward compatibility)"""
-    Base.metadata.create_all(bind=engine)
-
-
-def upsert_emails(email_rows: Iterable[dict], batch_size: int = 1000) -> int:
-    """
-    Insert many emails efficiently; skip duplicates by gmail_message_id (backward compatibility).
-
-    Uses PostgreSQL ON CONFLICT DO NOTHING on the unique key.
-    Returns number of newly inserted rows.
-    """
-    db_service = DatabaseService()
-    return db_service.upsert_emails(email_rows, batch_size)

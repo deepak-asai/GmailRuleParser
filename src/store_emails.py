@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.gmail_api_v2 import GmailApiService
+from src.gmail_api import GmailApiService
 from .storage import DatabaseService
 
 MAX_PAGES_TO_PROCESS = 10

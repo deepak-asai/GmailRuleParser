@@ -8,7 +8,6 @@ import base64
 import html
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from bs4 import BeautifulSoup
@@ -41,7 +40,12 @@ class GmailApiService:
     """Gmail API service singleton for managing emails and labels"""
     
     def __init__(self, service = None):
-        """Initialize Gmail API service"""
+        """
+        Initialize Gmail API service.
+        
+        Args:
+            service: Optional Gmail API service instance. If None, will load credentials and create service.
+        """
         self.service = service or self._load_credentials()
     
     def list_message_ids_in_inbox(self, next_page_token: str | None = None, max_results: int = 50) -> tuple[List[str], str | None]:
@@ -77,9 +81,23 @@ class GmailApiService:
         results: Dict[str, Dict[str, Any]] = {}
 
         def make_batch(ids: List[str]):
+            """
+            Create and execute a batch request for multiple message IDs.
+            
+            Args:
+                ids: List of message IDs to fetch in this batch
+            """
             batch = self.service.new_batch_http_request()
 
             def callback(request_id, response, exception):
+                """
+                Callback function for batch request responses.
+                
+                Args:
+                    request_id: The message ID that was requested
+                    response: The API response for the message
+                    exception: Any exception that occurred during the request
+                """
                 if exception is None and isinstance(response, dict):
                     try:
                         results[request_id] = self._parse_message_for_rules(response)
@@ -108,8 +126,12 @@ class GmailApiService:
         return results
 
     def _get_all_labels_map(self) -> Dict[str, str]:
-        """Get mapping of label names to IDs"""
-        # name -> id
+        """
+        Get mapping of label names to IDs.
+        
+        Returns:
+            Dictionary mapping label names to their IDs.
+        """
         labels = (
             self.service.users()
             .labels()
@@ -202,8 +224,18 @@ class GmailApiService:
         self.modify_message_labels(message_ids, add=[label_id], remove=remove_ids)
 
     def _b64url_decode(self, data: str) -> bytes:
-        """Decode base64url data without padding"""
-        # Gmail returns base64url without padding
+        """
+        Decode base64url data without padding.
+        
+        Gmail returns base64url encoded data without padding characters.
+        This method adds the necessary padding before decoding.
+        
+        Args:
+            data: Base64url encoded string without padding
+            
+        Returns:
+            Decoded bytes
+        """
         padding = '=' * (-len(data) % 4)
         return base64.urlsafe_b64decode(data + padding)
 
@@ -234,12 +266,30 @@ class GmailApiService:
             return html.unescape(html_content)
 
     def _collect_text_from_payload(self, payload: dict) -> str:
-        """Collect text content from message payload"""
+        """
+        Collect text content from Gmail message payload.
+        
+        Recursively traverses the MIME structure of the message payload to extract
+        all text content from both plain text and HTML parts. HTML content is
+        stripped of tags and cleaned up.
+        
+        Args:
+            payload: Gmail message payload dictionary containing MIME structure
+            
+        Returns:
+            Combined text content from all text parts in the message
+        """
         texts: List[str] = []
         if not payload:
             return ""
 
-        def walk(part: dict) -> None:
+        def extract_text_from_mime_part(part: dict) -> None:
+            """
+            Recursively extract text from a MIME part and its children.
+            
+            Args:
+                part: MIME part dictionary to process
+            """
             if not part:
                 return
             mime_type = part.get("mimeType")
@@ -258,14 +308,34 @@ class GmailApiService:
                 except Exception:
                     pass
             for child in part.get("parts", []) or []:
-                walk(child)
+                extract_text_from_mime_part(child)
 
-        walk(payload)
+        extract_text_from_mime_part(payload)
         return "\n".join(texts)
 
     def _parse_message_for_rules(self, msg: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse message for rule processing"""
+        """
+        Parse Gmail message for rule processing.
+        
+        Extracts relevant fields from a Gmail message and formats them for
+        rule processing. This includes headers, message content, and metadata.
+        
+        Args:
+            msg: Raw Gmail message dictionary from the API
+            
+        Returns:
+            Dictionary containing parsed message data for rule processing
+        """
         def header(name: str) -> Optional[str]:
+            """
+            Extract header value by name from message headers.
+            
+            Args:
+                name: Header name to search for
+                
+            Returns:
+                Header value if found, None otherwise
+            """
             for h in msg.get("payload", {}).get("headers", []):
                 if h.get("name") == name:
                     return h.get("value")
@@ -293,18 +363,41 @@ class GmailApiService:
         }
 
     def _paths(self) -> tuple[str, str]:
-        """Get paths for credentials and token files"""
+        """
+        Get paths for credentials and token files.
+        
+        Returns:
+            Tuple of (credentials_file_path, token_file_path)
+        """
         creds_path = os.getenv("GOOGLE_CREDENTIALS_FILE", os.path.join(os.getcwd(), "credentials.json"))
         token_path = os.getenv("GOOGLE_TOKEN_FILE", os.path.join(os.getcwd(), "token.json"))
         return creds_path, token_path
 
     def _save_credentials_to_file(self, token_path: str, creds: Credentials) -> None:
-        """Save credentials to token file"""
+        """
+        Save OAuth credentials to token file.
+        
+        Args:
+            token_path: Path to the token file
+            creds: OAuth credentials object to save
+        """
         with open(token_path, "w") as token_file:
             token_file.write(creds.to_json())
 
     def _load_credentials(self) -> Any:
-        """Load and refresh OAuth credentials, return Gmail service"""
+        """
+        Load and refresh OAuth credentials, return Gmail service.
+        
+        Handles the OAuth2 flow for Gmail API authentication. If credentials
+        don't exist or are expired, it will trigger the OAuth flow to get
+        new credentials from the user.
+        
+        Returns:
+            Gmail API service instance
+            
+        Raises:
+            FileNotFoundError: If credentials.json file is not found
+        """
         _, token_path = self._paths()
         creds: Optional[Credentials] = None
         if os.path.exists(token_path):

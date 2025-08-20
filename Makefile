@@ -30,7 +30,7 @@ psql:
 	docker exec -it gmail_rule_parser_db psql -U $$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' gmail_rule_parser_db | awk -F= '/POSTGRES_USER/{print $$2; exit}') -d $$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' gmail_rule_parser_db | awk -F= '/POSTGRES_DB/{print $$2; exit}')
 
 rules:
-	$(PY) -m src.process_rules -r src/rules.json --max 100
+	$(PY) -m src.process_rules -r src/rules.json
 
 reset-db:
 	$(PY) -m src.reset_db

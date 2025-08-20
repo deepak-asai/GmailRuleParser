@@ -5,7 +5,27 @@ import time
 from .config import get_settings
 from .db import create_engine_for_url, get_database_version
 from .gmail_api import get_gmail_service, list_message_ids_in_inbox, get_messages_for_rules_batch
-from .storage import ensure_schema, upsert_emails
+from .storage import upsert_emails
+from .constants import MAX_PAGES_TO_PROCESS
+
+def fetch_and_store_emails(engine):
+    service = get_gmail_service()
+    
+    current_page = 0
+    next_page_token = None
+    while current_page < MAX_PAGES_TO_PROCESS:
+        message_ids, next_page_token = list_message_ids_in_inbox(service, next_page_token, max_results=50)
+        print(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
+
+        # Fetch full messages in batch, then map to DB schema
+        results = get_messages_for_rules_batch(service, message_ids)
+        print("Result count: ", len(results))
+        inserted = upsert_emails(engine, results.values())
+        print(f"Inserted {inserted} new emails (skipped existing)")
+
+        if not next_page_token:
+            break
+        current_page += 1
 
 
 def main() -> None:
@@ -19,16 +39,8 @@ def main() -> None:
         print("Could not connect to Postgres")
         return
         
-
-    service = get_gmail_service()
-    message_ids = list_message_ids_in_inbox(service, max_results=50)
-    print(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
-
-    # Fetch full messages in batch, then map to DB schema
-    results = get_messages_for_rules_batch(service, message_ids)
-    print("Result count: ", len(results))
-    inserted = upsert_emails(engine, results.values())
-    print(f"Inserted {inserted} new emails (skipped existing)")
+    fetch_and_store_emails(engine)
+   
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from typing import List
+from datetime import datetime, timezone
 
 from .gmail_api import (
     get_gmail_service,
@@ -17,24 +18,24 @@ from sqlalchemy.orm import Session
 from .models import Email
 
 
-def apply_actions(service, message_id: str, actions: List[dict]) -> None:
+def apply_actions(service, message_ids: List[str], actions: List[dict]) -> None:
     for action in actions:
         mark = action.get("mark")
         if mark == "read":
-            mark_as_read(service, message_id)
+            mark_as_read(service, message_ids)
         elif mark == "unread":
-            mark_as_unread(service, message_id)
+            mark_as_unread(service, message_ids)
 
-        move_to = action.get("move")
-        if isinstance(move_to, str) and move_to.strip():
-            move_message_to_label(service, message_id, move_to.strip(), move_to != "INBOX")
+        # move_to = action.get("move")
+        # if isinstance(move_to, str) and move_to.strip():
+        #     move_message_to_label(service, message_id, move_to.strip(), move_to != "INBOX")
 
 
 def main() -> None:
+    MAX_MESSAGES_TO_PROCESS = 100
     parser = argparse.ArgumentParser(description="Process Gmail messages based on JSON rules")
     parser.add_argument("rules_pos", nargs="?", default=None, help="Path to rules JSON file (positional)")
     parser.add_argument("--rules", "-r", default="src/rules.json", help="Path to rules JSON file")
-    parser.add_argument("--max", type=int, default=100, help="Max messages to consider from database")
     args = parser.parse_args()
     
     # Setup database connection
@@ -48,24 +49,47 @@ def main() -> None:
 
     # Fetch messages from database
     with Session(engine) as session:
-        emails = session.query(Email).limit(args.max).all()
-        print(f"Checking {len(emails)} messages from database against rules...")
-
-        for email in emails:
-            # Convert Email model to dict format expected by rules
-            msg = {
-                "id": email.gmail_message_id,
-                "from": email.from_address,
-                "to": email.to_address,
-                "subject": email.subject or "",
-                "message": email.snippet or "",
-                "received_at": email.received_at,
-                "label_ids": email.label_ids or [],
-            }
+        while True:
+            emails = session.query(Email).filter(Email.processed_at.is_(None)).limit(MAX_MESSAGES_TO_PROCESS).all()
+            print(f"Checking {len(emails)} messages from database against rules...")
             
-            if message_matches_rule(rule, msg):
-                print(f"Message {email.gmail_message_id} matched rule")
-                apply_actions(service, email.gmail_message_id, rule.actions)
+            # Break if no more emails to process
+            if len(emails) == 0:
+                print("No more emails to process")
+                break
+            
+            matching_message_ids = []
+            processed_emails = []
+            
+            for email in emails:
+                # Convert Email model to dict format expected by rules
+                msg = {
+                    "id": email.gmail_message_id,
+                    "from": email.from_address,
+                    "to": email.to_address or "",
+                    "subject": email.subject or "",
+                    "message": email.snippet or "",
+                    "received_at": email.received_at,
+                    "label_ids": email.label_ids or [],
+                }
+                
+                if message_matches_rule(rule, msg):
+                    # print(f"Message {email.gmail_message_id} matched rule")
+                    matching_message_ids.append(email.gmail_message_id)
+                
+                # Mark as processed
+                email.processed_at = datetime.now(timezone.utc)
+                processed_emails.append(email)
+            # Apply actions to matching messages
+            if matching_message_ids:
+                apply_actions(service, matching_message_ids, rule.actions)
+            
+            # Commit all processed emails
+            # breakpoint()
+            session.commit()
+            print(f"Marked {len(processed_emails)} emails as processed")
+
+        
 
 
 if __name__ == "__main__":

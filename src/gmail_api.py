@@ -58,16 +58,16 @@ def get_gmail_service():
     return service
 
 
-def list_message_ids_in_inbox(service, max_results: int = 50) -> List[str]:
+def list_message_ids_in_inbox(service, next_page_token: str | None = None, max_results: int = 50) -> List[str]:
     results = (
         service.users()
         .messages()
-        .list(userId="me", labelIds=["INBOX"], maxResults=max_results)
+        .list(userId="me", labelIds=["INBOX"], maxResults=max_results, pageToken=next_page_token)
         .execute()
     )
     messages = results.get("messages", [])
     # breakpoint()
-    return [m["id"] for m in messages]
+    return (list(m["id"] for m in messages)), results.get("nextPageToken")
 
 
 def get_message_details(service, message_id: str) -> Dict[str, Any]:
@@ -232,8 +232,9 @@ def ensure_label_exists(service, label_name: str) -> str:
     return created.get("id")
 
 
-def modify_message_labels(service, message_id: str, add: List[str] | None = None, remove: List[str] | None = None) -> None:
+def modify_message_labels(service, message_ids: List[str], add: List[str] | None = None, remove: List[str] | None = None) -> None:
     body: Dict[str, List[str]] = {}
+    body["ids"] = message_ids
     if add:
         body["addLabelIds"] = add
     if remove:
@@ -241,22 +242,26 @@ def modify_message_labels(service, message_id: str, add: List[str] | None = None
     (
         service.users()
         .messages()
-        .modify(userId="me", id=message_id, body=body)
+        .batchModify(userId="me", body=body)
         .execute()
     )
 
 
-def mark_as_read(service, message_id: str) -> None:
-    modify_message_labels(service, message_id, remove=["UNREAD"])
+def mark_as_read(service, message_ids: List[str]) -> None:
+    if(len(message_ids) > 1000):
+        raise ValueError("Cannot mark more than 1000 messages at once")
+
+    modify_message_labels(service, message_ids, remove=["UNREAD"])
 
 
-def mark_as_unread(service, message_id: str) -> None:
-    modify_message_labels(service, message_id, add=["UNREAD"])
+def mark_as_unread(service, message_ids: List[str]) -> None:
+    modify_message_labels(service, message_ids, add=["UNREAD"])
 
 
 def move_message_to_label(service, message_id: str, label_name: str, remove_from_inbox: bool = True) -> None:
-    label_id = ensure_label_exists(service, label_name)
-    remove_ids: List[str] = ["INBOX"] if remove_from_inbox else []
-    modify_message_labels(service, message_id, add=[label_id], remove=remove_ids)
+    pass
+    # label_id = ensure_label_exists(service, label_name)
+    # remove_ids: List[str] = ["INBOX"] if remove_from_inbox else []
+    # modify_message_labels(service, message_id, add=[label_id], remove=remove_ids)
 
 

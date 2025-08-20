@@ -4,12 +4,10 @@ from src.config.logging_config import setup_logging
 from src.gmail_api_service import GmailApiService
 from src.db_service import DatabaseService
 from src.config import get_logger
+from src.constants import MAX_PAGES_TO_PROCESS, MAX_RESULTS_PER_PAGE
 
 # Set up logger for this module
 logger = get_logger(__name__)
-
-MAX_PAGES_TO_PROCESS = 10
-MAX_RESULTS_PER_PAGE = 50
 
 class EmailStoreService:
     """Service class for fetching and storing emails from Gmail"""

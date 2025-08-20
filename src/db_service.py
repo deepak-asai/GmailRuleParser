@@ -10,6 +10,13 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.models import Base, Email
 from src.config import get_settings, create_engine_for_url, get_logger
+from src.constants import (
+    FIELD_FROM, FIELD_TO, FIELD_SUBJECT, FIELD_MESSAGE, FIELD_RECEIVED,
+    PREDICATE_CONTAINS, PREDICATE_DOES_NOT_CONTAIN, PREDICATE_EQUALS, PREDICATE_DOES_NOT_EQUAL,
+    PREDICATE_LESS_THAN_DAYS, PREDICATE_GREATER_THAN_DAYS, PREDICATE_LESS_THAN_MONTHS, PREDICATE_GREATER_THAN_MONTHS,
+    RULE_PREDICATE_ALL, BATCH_SIZE_DEFAULT, DAYS_PER_MONTH, DEFAULT_OFFSET, DEFAULT_LIMIT,
+    ERROR_INVALID_FIELD
+)
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -47,7 +54,7 @@ class DatabaseService:
         """Ensure database schema exists by creating all tables"""
         Base.metadata.create_all(bind=self.engine)
     
-    def upsert_emails(self, email_rows: Iterable[dict], batch_size: int = 1000) -> int:
+    def upsert_emails(self, email_rows: Iterable[dict], batch_size: int = BATCH_SIZE_DEFAULT) -> int:
         """
         Insert many emails efficiently; skip duplicates by gmail_message_id.
 
@@ -106,80 +113,80 @@ class DatabaseService:
             predicate = condition.predicate
             value = condition.value
             
-            if field == "From":
-                if predicate == "Contains":
+            if field == FIELD_FROM:
+                if predicate == PREDICATE_CONTAINS:
                     db_conditions.append(Email.from_address.ilike(f"%{value}%"))
-                elif predicate == "DoesNotContain":
+                elif predicate == PREDICATE_DOES_NOT_CONTAIN:
                     db_conditions.append(~Email.from_address.ilike(f"%{value}%"))
-                elif predicate == "Equals":
+                elif predicate == PREDICATE_EQUALS:
                     db_conditions.append(Email.from_address == value)
-                elif predicate == "DoesNotEqual":
+                elif predicate == PREDICATE_DOES_NOT_EQUAL:
                     db_conditions.append(Email.from_address != value)
                     
-            elif field == "To":
-                if predicate == "Contains":
+            elif field == FIELD_TO:
+                if predicate == PREDICATE_CONTAINS:
                     db_conditions.append(Email.to_address.ilike(f"%{value}%"))
-                elif predicate == "DoesNotContain":
+                elif predicate == PREDICATE_DOES_NOT_CONTAIN:
                     db_conditions.append(~Email.to_address.ilike(f"%{value}%"))
-                elif predicate == "Equals":
+                elif predicate == PREDICATE_EQUALS:
                     db_conditions.append(Email.to_address == value)
-                elif predicate == "DoesNotEqual":
+                elif predicate == PREDICATE_DOES_NOT_EQUAL:
                     db_conditions.append(Email.to_address != value)
                     
-            elif field == "Subject":
-                if predicate == "Contains":
+            elif field == FIELD_SUBJECT:
+                if predicate == PREDICATE_CONTAINS:
                     db_conditions.append(Email.subject.ilike(f"%{value}%"))
-                elif predicate == "DoesNotContain":
+                elif predicate == PREDICATE_DOES_NOT_CONTAIN:
                     db_conditions.append(~Email.subject.ilike(f"%{value}%"))
-                elif predicate == "Equals":
+                elif predicate == PREDICATE_EQUALS:
                     db_conditions.append(Email.subject == value)
-                elif predicate == "DoesNotEqual":
+                elif predicate == PREDICATE_DOES_NOT_EQUAL:
                     db_conditions.append(Email.subject != value)
                     
-            elif field == "Message":
-                if predicate == "Contains":
+            elif field == FIELD_MESSAGE:
+                if predicate == PREDICATE_CONTAINS:
                     db_conditions.append(Email.message.ilike(f"%{value}%"))
-                elif predicate == "DoesNotContain":
+                elif predicate == PREDICATE_DOES_NOT_CONTAIN:
                     db_conditions.append(~Email.message.ilike(f"%{value}%"))
-                elif predicate == "Equals":
+                elif predicate == PREDICATE_EQUALS:
                     db_conditions.append(Email.message == value)
-                elif predicate == "DoesNotEqual":
+                elif predicate == PREDICATE_DOES_NOT_EQUAL:
                     db_conditions.append(Email.message != value)
                     
-            elif field == "Received":
+            elif field == FIELD_RECEIVED:
                 try:
                     num = float(value)
                     now = datetime.now(timezone.utc)
                     
-                    if predicate == "LessThanDays":
+                    if predicate == PREDICATE_LESS_THAN_DAYS:
                         cutoff_date = now - timedelta(days=num)
                         db_conditions.append(Email.received_at > cutoff_date)
-                    elif predicate == "GreaterThanDays":
+                    elif predicate == PREDICATE_GREATER_THAN_DAYS:
                         cutoff_date = now - timedelta(days=num)
                         db_conditions.append(Email.received_at < cutoff_date)
-                    elif predicate == "LessThanMonths":
-                        cutoff_date = now - timedelta(days=num * 30)
+                    elif predicate == PREDICATE_LESS_THAN_MONTHS:
+                        cutoff_date = now - timedelta(days=num * DAYS_PER_MONTH)
                         db_conditions.append(Email.received_at > cutoff_date)
-                    elif predicate == "GreaterThanMonths":
-                        cutoff_date = now - timedelta(days=num * 30)
+                    elif predicate == PREDICATE_GREATER_THAN_MONTHS:
+                        cutoff_date = now - timedelta(days=num * DAYS_PER_MONTH)
                         db_conditions.append(Email.received_at < cutoff_date)
                 except ValueError:
                     # If value can't be converted to float, skip this condition
                     continue
             else:
-                raise ValueError(f"Invalid field: {field}")
+                raise ValueError(ERROR_INVALID_FIELD.format(field))
         
         # Apply conditions based on rule predicate
         if db_conditions:
-            if rule.predicate == "All":
+            if rule.predicate == RULE_PREDICATE_ALL:
                 query = query.filter(and_(*db_conditions))
-            else:  # "Any"
+            else:  # RULE_PREDICATE_ANY
                 query = query.filter(or_(*db_conditions))
         
         # Print the raw SQL query
         return query
     
-    def get_matching_emails(self, rule, offset: int = 0, limit: int = 20) -> List[Email]:
+    def get_matching_emails(self, rule, offset: int = DEFAULT_OFFSET, limit: int = DEFAULT_LIMIT) -> List[Email]:
         """
         Get emails matching rule conditions from database with pagination.
         

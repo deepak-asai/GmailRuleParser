@@ -8,11 +8,10 @@ from src.gmail_api_service import GmailApiService
 from src.rules import load_rules_from_file, Rule
 from src.db_service import DatabaseService
 from src.config import get_logger
+from src.constants import MAX_MESSAGES_TO_PROCESS, ACTION_MARK_READ, ACTION_MARK_UNREAD
 
 # Set up logger for this module
 logger = get_logger(__name__)
-
-MAX_MESSAGES_TO_PROCESS = 20
 
 
 class RuleProcessorService:
@@ -39,9 +38,9 @@ class RuleProcessorService:
         """
         for action in actions:
             mark = action.get("mark")
-            if mark == "read":
+            if mark == ACTION_MARK_READ:
                 self.gmail_api_service.mark_as_read(message_ids)
-            elif mark == "unread":
+            elif mark == ACTION_MARK_UNREAD:
                 self.gmail_api_service.mark_as_unread(message_ids)
 
             move_to = action.get("move")

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Iterable, List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 from src.config import get_logger
+from src.constants import (
+    RULE_PREDICATE_ALL, RULE_PREDICATE_ANY,
+    STRING_FIELDS, DATE_FIELDS, STRING_PREDICATES, DATE_PREDICATES
+)
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -22,13 +25,6 @@ Predicate = Literal[
     "LessThanMonths",
     "GreaterThanMonths",
 ]
-
-# Define valid field-predicate combinations
-STRING_FIELDS = {"From", "To", "Subject", "Message"}
-DATE_FIELDS = {"Received"}
-
-STRING_PREDICATES = {"Contains", "DoesNotContain", "Equals", "DoesNotEqual"}
-DATE_PREDICATES = {"LessThanDays", "GreaterThanDays", "LessThanMonths", "GreaterThanMonths"}
 
 @dataclass(frozen=True)
 class Condition:
@@ -97,8 +93,8 @@ def validate_rule(rule: Rule) -> None:
     if not rule.conditions:
         raise ValueError("Rule must have at least one condition")
     
-    if rule.predicate not in {"All", "Any"}:
-        raise ValueError(f"Invalid predicate '{rule.predicate}'. Must be 'All' or 'Any'")
+    if rule.predicate not in {RULE_PREDICATE_ALL, RULE_PREDICATE_ANY}:
+        raise ValueError(f"Invalid predicate '{rule.predicate}'. Must be '{RULE_PREDICATE_ALL}' or '{RULE_PREDICATE_ANY}'")
     
     # Validate each condition
     for condition in rule.conditions:
@@ -122,7 +118,7 @@ def load_rules_from_file(path: str) -> List[Rule]:
             actions = rule_data.get("actions", {})
             rule = Rule(
                 conditions=conds,
-                predicate=rule_data.get("predicate", "All"),
+                predicate=rule_data.get("predicate", RULE_PREDICATE_ALL),
                 actions=actions,
                 name=rule_data.get("name"),
             )

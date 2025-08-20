@@ -4,13 +4,16 @@ Python project scaffold using venv locally and Postgres via Docker.
 
 ### Setup
 
-1. Copy env
+1. Download and install Docker Desktop
+
+2. Clone the repository
 
 ```bash
-cp env.example .env
+git clone https://github.com/deepak-asai/GmailRuleParser.git
+cd GmailRuleParser
 ```
 
-2. Create venv and install deps
+3. Install virtual environment and dependencies
 
 ```bash
 python3 -m venv .venv
@@ -18,46 +21,35 @@ python3 -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ```
 
-3. Start Postgres
-
-```bash
-docker compose up -d db
-```
-
-4. Smoke test
-
-```bash
-./.venv/bin/python -m src.main
-```
-
-#### Docker Database Setup
-
-The project uses Docker only for the PostgreSQL database. The Python application runs locally.
-
-1. Copy env
+4. Copy environment file and set appropriate DB values
 
 ```bash
 cp env.example .env
 ```
 
-2. Start PostgreSQL database
+5. Set up Google API credentials
+
+Follow these steps to set up Google API access:
+
+   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   b. Create a new project
+   c. Navigate to **APIs & Services** in the left sidebar
+   d. Enable the **Gmail API** service
+   e. Go to **OAuth consent screen** and configure it
+   f. Create **OAuth Client ID** credentials and choose **Desktop application** as the application type
+   g. Download the credentials file and save it as `credentials.json` at root folder
+
+
+5. Start PostgreSQL database
 
 ```bash
-docker compose up -d db
+make up
 ```
 
-3. Create venv and install deps (same as local setup)
+6. Run the application. When starting the app for 1st time it will open your browser for authentication. Once completed, a `token.json` file will be created.
 
 ```bash
-python3 -m venv .venv
-./.venv/bin/pip install --upgrade pip
-./.venv/bin/pip install -r requirements.txt
-```
-
-4. Run the application locally
-
-```bash
-./.venv/bin/python -m src.main
+make process_emails
 ```
 
 #### Docker Commands
@@ -101,7 +93,7 @@ make docker-logs # view database logs
 Run all tests in the correct order to avoid mock interference:
 
 ```bash
-./run_tests.sh
+make tests
 ```
 
 Or run tests individually:
@@ -111,7 +103,7 @@ Or run tests individually:
 python3 -m pytest tests/test_store_emails_postgres_integration.py -v
 
 # Unit tests
-python3 -m pytest tests/test_gmail_api.py tests/test_process_rules.py tests/test_storage.py tests/test_store_emails.py -v
+python3 -m pytest tests/test_gmail_api_service.py tests/test_rule_processor_service.py tests/test_db_service.py tests/test_email_store_service.py -v
 ```
 
 ### Environment Configuration
@@ -157,5 +149,5 @@ Create a rules JSON file like `rules.json`:
 Run the processor:
 
 ```bash
-./.venv/bin/python -m gmail_rule_parser.process_rules rules.json --max 100
+./.venv/bin/python -m src.rule_processor_service rules.json --max 100
 ```

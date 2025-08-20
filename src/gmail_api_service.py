@@ -11,7 +11,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
-from src.logging_config import get_logger
+from src.config import get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -19,7 +19,6 @@ logger = get_logger(__name__)
 
 # Read-only scope is sufficient to list and read messages
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"]
-
 
 def singleton(cls):
     """
@@ -34,7 +33,6 @@ def singleton(cls):
         return instances[cls]
     
     return get_instance
-
 
 @singleton
 class GmailApiService:

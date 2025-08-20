@@ -11,7 +11,6 @@ from sqlalchemy.types import JSON
 class Base(DeclarativeBase):
     pass
 
-
 class Email(Base):
     __tablename__ = "emails"
     __table_args__ = (

@@ -5,7 +5,7 @@
     "conditions": [
       { "field": "From", "predicate": "Contains", "value": "zomato" }
     ],
-    "actions": [{ "move": "zomato2" }]
+    "actions": [{ "move": "zomato" }]
   },
   {
     "name": "rule2",

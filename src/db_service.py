@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.models import Base, Email
-from src.config import get_settings
-from src.db import create_engine_for_url
-from src.logging_config import get_logger
+from src.config import get_settings, create_engine_for_url, get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -179,10 +177,6 @@ class DatabaseService:
                 query = query.filter(or_(*db_conditions))
         
         # Print the raw SQL query
-        logger.info("Generated SQL Query:")
-        logger.info(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
-        logger.info("-" * 50)
-        
         return query
     
     def get_matching_emails(self, rule, offset: int = 0, limit: int = 20) -> List[Email]:

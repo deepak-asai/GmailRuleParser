@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from src.gmail_api import GmailApiService
-from src.storage import DatabaseService
-from src.logging_config import get_logger
+from src.gmail_api_service import GmailApiService
+from src.db_service import DatabaseService
+from src.config import get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)
 
 MAX_PAGES_TO_PROCESS = 10
 MAX_RESULTS_PER_PAGE = 50
-
 
 class EmailStoreService:
     """Service class for fetching and storing emails from Gmail"""
@@ -47,16 +46,15 @@ class EmailStoreService:
                 next_page_token, 
                 max_results=max_results_per_page
             )
-            logger.info(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
 
             # Fetch full messages in batch, then map to DB schema
             results = self.gmail_api_service.get_messages_for_rules_batch(message_ids)
-            logger.info(f"Result count: {len(results)}")
+            logger.info(f"Fetched {len(message_ids)} messages from INBOX")
             
             # Store emails in database
             inserted = self.db_service.upsert_emails(results.values())
             total_inserted += inserted
-            logger.info(f"Inserted {inserted} new emails (skipped existing)")
+            logger.info(f"Inserted {inserted} emails")
 
             if not next_page_token:
                 break

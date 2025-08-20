@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
-from src.storage import DatabaseService, singleton
+from src.db_service import DatabaseService, singleton
 from src.models import Email
 
 
@@ -33,7 +33,7 @@ class TestDatabaseService:
         self.mock_session.__exit__ = Mock(return_value=None)
         
         # Patch the database creation
-        with patch('src.storage.create_engine_for_url', return_value=self.mock_engine):
+        with patch('src.db_service.create_engine_for_url', return_value=self.mock_engine):
             self.db_service = DatabaseService()
         
         # Patch the get_session method to return our mock session
@@ -46,11 +46,11 @@ class TestDatabaseService:
             DatabaseService.__wrapped__.instances = {}
         
         # Create first instance
-        with patch('src.storage.create_engine_for_url', return_value=self.mock_engine):
+        with patch('src.db_service.create_engine_for_url', return_value=self.mock_engine):
             service1 = DatabaseService()
         
         # Create second instance - should be the same due to singleton
-        with patch('src.storage.create_engine_for_url', return_value=Mock()):
+        with patch('src.db_service.create_engine_for_url', return_value=Mock()):
             service2 = DatabaseService()
         
         # Both should be the same instance due to singleton behavior
@@ -64,7 +64,7 @@ class TestDatabaseService:
         session = self.db_service.get_session()
         assert session is self.mock_session
     
-    @patch('src.storage.pg_insert')
+    @patch('src.db_service.pg_insert')
     def test_upsert_emails_single_batch(self, mock_pg_insert):
         """Test upserting emails in a single batch"""
         # Mock the insert statement
@@ -88,7 +88,7 @@ class TestDatabaseService:
         assert inserted_count == 3
         self.mock_session.commit.assert_called_once()
     
-    @patch('src.storage.pg_insert')
+    @patch('src.db_service.pg_insert')
     def test_upsert_emails_multiple_batches(self, mock_pg_insert):
         """Test upserting emails across multiple batches"""
         # Mock the insert statement
@@ -114,7 +114,7 @@ class TestDatabaseService:
         assert inserted_count == 3  # 2 + 1
         assert self.mock_session.commit.call_count == 2  # Called twice for two batches
     
-    @patch('src.storage.pg_insert')
+    @patch('src.db_service.pg_insert')
     def test_upsert_emails_empty_batch(self, mock_pg_insert):
         """Test upserting empty email list"""
         inserted_count = self.db_service.upsert_emails([], batch_size=1000)

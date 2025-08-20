@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Iterable, List, Literal, Optional
-from src.logging_config import get_logger
+from src.config import get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)

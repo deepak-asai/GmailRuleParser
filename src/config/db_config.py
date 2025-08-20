@@ -4,13 +4,20 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from sqlalchemy import text
+from sqlalchemy.engine import Engine
 from dotenv import load_dotenv
 
+def create_engine_for_url(database_url: str) -> Engine:
+    from sqlalchemy import create_engine
+
+    # psycopg v3 works with SQLAlchemy 2.x URL: postgresql+psycopg://
+    engine = create_engine(database_url, pool_pre_ping=True, future=True)
+    return engine
 
 @dataclass(frozen=True)
 class Settings:
     database_url: str
-
 
 def build_database_url_from_parts(
     *,
@@ -46,5 +53,12 @@ def get_settings() -> Settings:
         user=user, password=password, host=host, port=port, db_name=db_name
     )
     return Settings(database_url=url)
+
+
+def get_database_version(engine: Engine) -> str:
+    with engine.connect() as connection:
+        version = connection.execute(text("select version();")).scalar()
+        assert isinstance(version, str)
+        return version
 
 

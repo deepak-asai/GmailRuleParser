@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from src.config import get_settings
-from src.db import create_engine_for_url
+from src.config import get_settings, create_engine_for_url, get_logger
 from src.models import Base
-from src.logging_config import get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)

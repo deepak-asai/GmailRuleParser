@@ -1,31 +1,17 @@
-#!/usr/bin/env python3
-"""
-Main entry point for the Gmail Rule Parser application.
-Demonstrates proper logging setup and application initialization.
-"""
-
-import sys
-from pathlib import Path
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from src.logging_config import setup_logging
-from src.store_emails import EmailStoreService
-from src.process_rules import RuleProcessorService
-
+from src.config import setup_logging
+from src.email_store_service import EmailStoreService
+from src.rule_processor_service import RuleProcessorService
 
 def main():
     """Main application entry point with proper logging setup."""
     # Set up logging - you can customize these parameters
     setup_logging(
         level="INFO",  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
-        log_file="logs/app.log",  # Optional: log to file
         log_format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     
     # Get logger for main module
-    from src.logging_config import get_logger
+    from src.config import get_logger
     logger = get_logger(__name__)
     
     logger.info("Starting Gmail Rule Parser application")
@@ -48,7 +34,6 @@ def main():
         
     except Exception as e:
         logger.error(f"Application failed with error: {e}", exc_info=True)
-        sys.exit(1)
 
 
 if __name__ == "__main__":

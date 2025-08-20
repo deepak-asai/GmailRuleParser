@@ -24,19 +24,19 @@ logs:
 	docker compose logs -f db
 
 store_emails:
-	$(PY) -m src.store_emails
+	$(PY) -m src.email_store_service
 
 psql:
 	docker exec -it gmail_rule_parser_db psql -U $$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' gmail_rule_parser_db | awk -F= '/POSTGRES_USER/{print $$2; exit}') -d $$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' gmail_rule_parser_db | awk -F= '/POSTGRES_DB/{print $$2; exit}')
 
 process_rules:
-	$(PY) -m src.process_rules -r src/rules.json
+	$(PY) -m src.rule_processor_service -r src/rules.json
 
 reset:
-	$(PY) -m src.reset_db
+	$(PY) -m src.scripts.reset_db
 
 setup:
-	$(PY) -m src.setup_db
+	$(PY) -m src.scripts.setup_db
 
 test:
 	./run_tests.sh

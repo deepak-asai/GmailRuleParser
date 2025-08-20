@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 from typing import Dict, List
 
-from src.store_emails import EmailStoreService, MAX_PAGES_TO_PROCESS, MAX_RESULTS_PER_PAGE
+from src.email_store_service import EmailStoreService, MAX_PAGES_TO_PROCESS, MAX_RESULTS_PER_PAGE
 
 
 class TestEmailStoreService:
@@ -27,8 +27,8 @@ class TestEmailStoreService:
         assert service.gmail_api_service == self.mock_gmail_service
         assert service.db_service == self.mock_db_service
     
-    @patch('src.store_emails.GmailApiService')
-    @patch('src.store_emails.DatabaseService')
+    @patch('src.email_store_service.GmailApiService')
+    @patch('src.email_store_service.DatabaseService')
     def test_init_without_services(self, mock_db_class, mock_gmail_class):
         """Test initialization without provided services"""
         mock_gmail_instance = Mock()

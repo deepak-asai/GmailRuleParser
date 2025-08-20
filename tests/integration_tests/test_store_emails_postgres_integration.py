@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 import base64
 
-from src.store_emails import EmailStoreService
-from src.storage import DatabaseService
+from src.email_store_service import EmailStoreService
+from src.db_service import DatabaseService
 from src.models import Email, Base
 
 
@@ -30,7 +30,7 @@ class TestEmailStoreServicePostgresIntegration:
             DatabaseService.__wrapped__.instances = {}
         
         # Create database service with test database
-        self.mock_settings_patcher = patch('src.storage.get_settings')
+        self.mock_settings_patcher = patch('src.db_service.get_settings')
         self.mock_settings = self.mock_settings_patcher.start()
         self.mock_settings.return_value.database_url = self.database_url
         self.db_service = DatabaseService()

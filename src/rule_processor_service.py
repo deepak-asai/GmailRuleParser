@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 from typing import List
 
-from src.gmail_api import GmailApiService
+from src.gmail_api_service import GmailApiService
 from src.rules import load_rules_from_file, Rule
-from src.storage import DatabaseService
-from src.logging_config import get_logger
+from src.db_service import DatabaseService
+from src.config import get_logger
 
 # Set up logger for this module
 logger = get_logger(__name__)

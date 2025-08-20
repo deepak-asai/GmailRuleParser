@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from typing import List, Dict
 
-from src.process_rules import RuleProcessorService, MAX_MESSAGES_TO_PROCESS
+from src.rule_processor_service import RuleProcessorService, MAX_MESSAGES_TO_PROCESS
 from src.rules import Rule, Condition
 
 
@@ -28,8 +28,8 @@ class TestRuleProcessorService:
         assert service.gmail_api_service == self.mock_gmail_service
         assert service.db_service == self.mock_db_service
     
-    @patch('src.process_rules.GmailApiService')
-    @patch('src.process_rules.DatabaseService')
+    @patch('src.rule_processor_service.GmailApiService')
+    @patch('src.rule_processor_service.DatabaseService')
     def test_init_without_services(self, mock_db_class, mock_gmail_class):
         """Test initialization without provided services"""
         mock_gmail_instance = Mock()
@@ -301,7 +301,7 @@ class TestRuleProcessorService:
             rule, offset=1, limit=50
         )
     
-    @patch('src.process_rules.load_rules_from_file')
+    @patch('src.rule_processor_service.load_rules_from_file')
     def test_process_rules_from_file(self, mock_load_rules):
         """Test processing rules from file"""
         # Create mock rule
@@ -340,7 +340,7 @@ class TestRuleProcessorService:
             rule, offset=1, limit=MAX_MESSAGES_TO_PROCESS
         )
     
-    @patch('src.process_rules.load_rules_from_file')
+    @patch('src.rule_processor_service.load_rules_from_file')
     def test_process_rules_from_file_custom_batch_size(self, mock_load_rules):
         """Test processing rules from file with custom batch size"""
         # Create mock rule

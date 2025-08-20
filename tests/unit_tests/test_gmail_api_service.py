@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from unittest.mock import Mock, patch, MagicMock, call
 from typing import Dict, List, Any
 
-from src.gmail_api import GmailApiService, singleton
+from src.gmail_api_service import GmailApiService, singleton
 
 
 class MockService:

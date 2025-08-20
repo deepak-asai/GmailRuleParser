@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from typing import List
 
+from src.config.logging_config import setup_logging
 from src.gmail_api_service import GmailApiService
 from src.rules import load_rules_from_file, Rule
 from src.db_service import DatabaseService
@@ -141,6 +142,11 @@ def main() -> None:
     parser.add_argument("rules_pos", nargs="?", default=None, help="Path to rules JSON file (positional)")
     parser.add_argument("--rules", "-r", default="src/rules.json", help="Path to rules JSON file")
     args = parser.parse_args()
+
+    setup_logging(
+        level="INFO",  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+        log_format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     
     # Load rule path
     rules_path = args.rules_pos or args.rules

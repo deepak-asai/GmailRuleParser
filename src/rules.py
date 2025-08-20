@@ -29,7 +29,6 @@ class Condition:
     predicate: Predicate
     value: str
 
-
 @dataclass(frozen=True)
 class Rule:
     predicate: Literal["All", "Any"]

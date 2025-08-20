@@ -11,7 +11,9 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
+from bs4 import BeautifulSoup
 from src.config import get_logger
+import re
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -205,6 +207,32 @@ class GmailApiService:
         padding = '=' * (-len(data) % 4)
         return base64.urlsafe_b64decode(data + padding)
 
+    def _strip_html(self, html_content: str) -> str:
+        """
+        Strip HTML tags from content using BeautifulSoup.
+        
+        Args:
+            html_content: HTML content to strip
+            
+        Returns:
+            Plain text content with HTML tags removed
+        """
+        if not html_content:
+            return ""
+        
+        try:
+            # Parse HTML and extract text
+            soup = BeautifulSoup(html_content, 'html.parser')
+            # Get text content, removing extra whitespace
+            text = soup.get_text(separator=' ', strip=True)
+            # Clean up multiple spaces and newlines
+            text = re.sub(r'\s+', ' ', text).strip()
+            return text
+        except Exception as e:
+            logger.warning(f"Error stripping HTML: {e}")
+            # Fallback to simple HTML unescape if BeautifulSoup fails
+            return html.unescape(html_content)
+
     def _collect_text_from_payload(self, payload: dict) -> str:
         """Collect text content from message payload"""
         texts: List[str] = []
@@ -221,7 +249,11 @@ class GmailApiService:
                 try:
                     decoded = self._b64url_decode(data).decode("utf-8", errors="ignore")
                     if mime_type == "text/html":
-                        decoded = html.unescape(decoded)
+                        # Strip HTML tags using BeautifulSoup
+                        decoded = self._strip_html(decoded)
+                    else:
+                        # Clean up extra spaces and newlines for plain text as well
+                        decoded = re.sub(r'\s+', ' ', decoded).strip()
                     texts.append(decoded)
                 except Exception:
                     pass
@@ -256,7 +288,7 @@ class GmailApiService:
             "from_address": header("From"),
             "to_address": header("To"),
             "subject": header("Subject") or "",
-            "snippet": msg.get("snippet"),
+            "message": message_text,
             "received_at": internal_dt,
         }
 

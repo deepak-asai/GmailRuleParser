@@ -19,13 +19,12 @@ class Email(Base):
         Index("ix_emails_subject_gin", "subject", postgresql_using="gin", postgresql_ops={"subject": "gin_trgm_ops"}),
         Index("ix_emails_from_address_gin", "from_address", postgresql_using="gin", postgresql_ops={"from_address": "gin_trgm_ops"}),
         Index("ix_emails_to_address_gin", "to_address", postgresql_using="gin", postgresql_ops={"to_address": "gin_trgm_ops"}),
-        Index("ix_emails_snippet_gin", "snippet", postgresql_using="gin", postgresql_ops={"snippet": "gin_trgm_ops"}),
+        Index("ix_emails_message_gin", "message", postgresql_using="gin", postgresql_ops={"message": "gin_trgm_ops"}),
         # B-tree indexes for equlaity searches
         Index("ix_emails_received_at", "received_at"),
         Index("ix_emails_subject_btree", "subject"),
         Index("ix_emails_from_address_btree", "from_address"),
         Index("ix_emails_to_address_btree", "to_address"),
-        Index("ix_emails_snippet_btree", "snippet"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -37,7 +36,7 @@ class Email(Base):
     from_address: Mapped[str] = mapped_column(String(1024), nullable=False)
     to_address: Mapped[str] = mapped_column(String(1024), nullable=False)
 
-    snippet: Mapped[Optional[str]] = mapped_column(Text)
+    message: Mapped[Optional[str]] = mapped_column(Text)
     label_ids: Mapped[Optional[list[str]]] = mapped_column(JSON)
 
     received_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

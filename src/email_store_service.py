@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.config.logging_config import setup_logging
 from src.gmail_api_service import GmailApiService
 from src.db_service import DatabaseService
 from src.config import get_logger
@@ -64,10 +65,10 @@ class EmailStoreService:
     
     def store_single_page(self, max_results: int = MAX_RESULTS_PER_PAGE) -> int:
         """
-        Fetch and store a single page of emails.
+        Store a single page of emails from Gmail.
         
         Args:
-            max_results: Maximum results to fetch
+            max_results: Maximum results per page
             
         Returns:
             Number of emails inserted
@@ -77,20 +78,23 @@ class EmailStoreService:
             None, 
             max_results=max_results
         )
-        logger.info(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
 
         # Fetch full messages in batch, then map to DB schema
         results = self.gmail_api_service.get_messages_for_rules_batch(message_ids)
-        logger.info(f"Result count: {len(results)}")
+        logger.info(f"Fetched {len(message_ids)} messages from INBOX")
         
         # Store emails in database
         inserted = self.db_service.upsert_emails(results.values())
-        logger.info(f"Inserted {inserted} new emails (skipped existing)")
+        logger.info(f"Inserted {inserted} emails")
         
         return inserted
-
+    
 def main() -> None:
     """Main function to fetch and store emails"""
+    setup_logging(
+        level="INFO",  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+        log_format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     service = EmailStoreService()
     total_inserted = service.fetch_and_store_emails()
     logger.info(f"Total emails inserted: {total_inserted}")

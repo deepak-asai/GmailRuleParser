@@ -138,13 +138,13 @@ class DatabaseService:
                     
             elif field == "Message":
                 if predicate == "Contains":
-                    db_conditions.append(Email.snippet.ilike(f"%{value}%"))
+                    db_conditions.append(Email.message.ilike(f"%{value}%"))
                 elif predicate == "DoesNotContain":
-                    db_conditions.append(~Email.snippet.ilike(f"%{value}%"))
+                    db_conditions.append(~Email.message.ilike(f"%{value}%"))
                 elif predicate == "Equals":
-                    db_conditions.append(Email.snippet == value)
+                    db_conditions.append(Email.message == value)
                 elif predicate == "DoesNotEqual":
-                    db_conditions.append(Email.snippet != value)
+                    db_conditions.append(Email.message != value)
                     
             elif field == "Received":
                 try:

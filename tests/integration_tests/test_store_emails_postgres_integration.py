@@ -4,6 +4,7 @@ import time
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 import base64
+from sqlalchemy import text
 
 from src.email_store_service import EmailStoreService
 from src.db_service import DatabaseService
@@ -35,13 +36,9 @@ class TestEmailStoreServicePostgresIntegration:
         self.mock_settings.return_value.database_url = self.database_url
         self.db_service = DatabaseService()
         
-        # Create database schema
-        self.db_service.ensure_schema()
-        
-        # Clear any existing data
-        with self.db_service.get_session() as session:
-            session.query(Email).delete()
-            session.commit()
+        # Drop all tables and recreate schema
+        Base.metadata.drop_all(bind=self.db_service.engine)
+        Base.metadata.create_all(bind=self.db_service.engine)
         
         # Create mock Gmail API service
         self.mock_gmail_service = Mock()
@@ -54,14 +51,16 @@ class TestEmailStoreServicePostgresIntegration:
     
     def teardown_method(self):
         """Clean up test fixtures after each test method"""
-        # Clear test data
-        with self.db_service.get_session() as session:
-            session.query(Email).delete()
-            session.commit()
+        # Stop the settings patch
+        self.mock_settings_patcher.stop()
         
         # Close database connections
         if hasattr(self.db_service, 'engine'):
             self.db_service.engine.dispose()
+        
+        # Clear singleton instances
+        if hasattr(DatabaseService, '__wrapped__'):
+            DatabaseService.__wrapped__.instances = {}
     
     def create_mock_gmail_message(self, message_id: str, **kwargs) -> dict:
         """Helper method to create mock Gmail message data"""
@@ -72,7 +71,6 @@ class TestEmailStoreServicePostgresIntegration:
             "subject": f"Test Subject {message_id}",
             "from_address": f"sender_{message_id}@example.com",
             "to_address": "recipient@example.com",
-            "snippet": f"Test snippet for {message_id}",
             "label_ids": ["INBOX", "UNREAD"],
             "received_at": datetime.now(timezone.utc),
             "created_at": datetime.now(timezone.utc)
@@ -279,7 +277,6 @@ class TestEmailStoreServicePostgresIntegration:
             assert email.from_address == "sender@example.com"
             assert email.to_address == "recipient@example.com"
             assert email.subject is None  # Optional field
-            assert email.snippet is None  # Optional field
     
     def test_postgresql_upsert_performance(self):
         """Test PostgreSQL upsert performance with batch operations"""

@@ -48,7 +48,6 @@ class MockService:
             "id": message_id,
             "threadId": f"thread_{message_id}",
             "labelIds": ["INBOX", "UNREAD"],
-            "snippet": f"Test snippet for {message_id}",
             "internalDate": "1640995200000",  # 2022-01-01 00:00:00 UTC
             "payload": {
                 "headers": [
@@ -101,7 +100,6 @@ class MockBatchRequest:
                 "id": request_id,
                 "threadId": f"thread_{request_id}",
                 "labelIds": ["INBOX", "UNREAD"],
-                "snippet": f"Test snippet for {request_id}",
                 "internalDate": "1640995200000",
                 "payload": {
                     "headers": [
@@ -293,7 +291,6 @@ class TestGmailApiService:
             "id": "msg123",
             "threadId": "thread123",
             "labelIds": ["INBOX", "UNREAD"],
-            "snippet": "Test snippet",
             "internalDate": "1640995200000",  # 2022-01-01 00:00:00 UTC
             "payload": {
                 "headers": [
@@ -312,5 +309,4 @@ class TestGmailApiService:
         assert result["from_address"] == "sender@example.com"
         assert result["to_address"] == "recipient@example.com"
         assert result["subject"] == "Test Subject"
-        assert result["snippet"] == "Test snippet"
         assert result["received_at"] == datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)

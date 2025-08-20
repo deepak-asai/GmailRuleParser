@@ -94,9 +94,6 @@ class TestEmailStoreServicePostgresIntegration:
         }
         self.mock_gmail_service.get_messages_for_rules_batch.return_value = mock_messages
         
-        # Debug: Print the mock data
-        print(f"Mock messages: {list(mock_messages.values())}")
-        
         # Execute the service
         inserted_count = self.email_store_service.store_single_page(max_results=50)
         
@@ -104,15 +101,9 @@ class TestEmailStoreServicePostgresIntegration:
         self.mock_gmail_service.list_message_ids_in_inbox.assert_called_once_with(None, max_results=50)
         self.mock_gmail_service.get_messages_for_rules_batch.assert_called_once_with(mock_message_ids)
         
-        # Debug: Check what was actually inserted
-        print(f"Service reported inserting {inserted_count} emails")
-        
         # Verify database contains the emails
         with self.db_service.get_session() as session:
             emails = session.query(Email).all()
-            print(f"Database actually contains {len(emails)} emails")
-            if emails:
-                print(f"First email: {emails[0].gmail_message_id}")
             
             assert len(emails) == 3
             assert inserted_count == 3
@@ -316,7 +307,6 @@ class TestEmailStoreServicePostgresIntegration:
         
         # Verify performance (should be reasonably fast)
         insertion_time = end_time - start_time
-        print(f"Inserted {batch_size} emails in {insertion_time:.3f} seconds")
         assert insertion_time < 5.0  # Should complete within 5 seconds
         
         # Verify database contains all emails

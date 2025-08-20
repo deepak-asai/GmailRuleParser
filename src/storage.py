@@ -8,9 +8,13 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from .models import Base, Email
-from .config import get_settings
-from .db import create_engine_for_url
+from src.models import Base, Email
+from src.config import get_settings
+from src.db import create_engine_for_url
+from src.logging_config import get_logger
+
+# Set up logger for this module
+logger = get_logger(__name__)
 
 
 def singleton(cls):
@@ -175,9 +179,9 @@ class DatabaseService:
                 query = query.filter(or_(*db_conditions))
         
         # Print the raw SQL query
-        print("Generated SQL Query:")
-        print(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
-        print("-" * 50)
+        logger.info("Generated SQL Query:")
+        logger.info(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
+        logger.info("-" * 50)
         
         return query
     

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from src.gmail_api import GmailApiService
-from .storage import DatabaseService
+from src.storage import DatabaseService
+from src.logging_config import get_logger
+
+# Set up logger for this module
+logger = get_logger(__name__)
 
 MAX_PAGES_TO_PROCESS = 10
 MAX_RESULTS_PER_PAGE = 50
@@ -43,16 +47,16 @@ class EmailStoreService:
                 next_page_token, 
                 max_results=max_results_per_page
             )
-            print(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
+            logger.info(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
 
             # Fetch full messages in batch, then map to DB schema
             results = self.gmail_api_service.get_messages_for_rules_batch(message_ids)
-            print("Result count: ", len(results))
+            logger.info(f"Result count: {len(results)}")
             
             # Store emails in database
             inserted = self.db_service.upsert_emails(results.values())
             total_inserted += inserted
-            print(f"Inserted {inserted} new emails (skipped existing)")
+            logger.info(f"Inserted {inserted} new emails (skipped existing)")
 
             if not next_page_token:
                 break
@@ -75,15 +79,15 @@ class EmailStoreService:
             None, 
             max_results=max_results
         )
-        print(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
+        logger.info(f"Fetched {len(message_ids)}, {len(set(message_ids))} message ids from INBOX")
 
         # Fetch full messages in batch, then map to DB schema
         results = self.gmail_api_service.get_messages_for_rules_batch(message_ids)
-        print("Result count: ", len(results))
+        logger.info(f"Result count: {len(results)}")
         
         # Store emails in database
         inserted = self.db_service.upsert_emails(results.values())
-        print(f"Inserted {inserted} new emails (skipped existing)")
+        logger.info(f"Inserted {inserted} new emails (skipped existing)")
         
         return inserted
 
@@ -91,7 +95,7 @@ def main() -> None:
     """Main function to fetch and store emails"""
     service = EmailStoreService()
     total_inserted = service.fetch_and_store_emails()
-    print(f"Total emails inserted: {total_inserted}")
+    logger.info(f"Total emails inserted: {total_inserted}")
 
 
 if __name__ == "__main__":

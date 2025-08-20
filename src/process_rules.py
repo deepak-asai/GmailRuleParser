@@ -4,8 +4,12 @@ import argparse
 from typing import List
 
 from src.gmail_api import GmailApiService
-from .rules import load_rules_from_file, load_single_rule_from_file, Rule
-from .storage import DatabaseService
+from src.rules import load_rules_from_file, Rule
+from src.storage import DatabaseService
+from src.logging_config import get_logger
+
+# Set up logger for this module
+logger = get_logger(__name__)
 
 MAX_MESSAGES_TO_PROCESS = 20
 
@@ -41,8 +45,8 @@ class RuleProcessorService:
 
             move_to = action.get("move")
             if isinstance(move_to, str) and move_to.strip():
-                # gmail_api_service.move_message_to_label(message_ids, move_to.strip(), move_to != "INBOX")
-                self.gmail_api_service.move_message_to_label(message_ids, move_to.strip(), False) # TODO: Revert to old code
+                # TODO: Need to decide if we want to remove from inbox or not
+                self.gmail_api_service.move_message_to_label(message_ids, move_to.strip(), False)
     
     def process_emails_with_rules(self, rule: Rule, max_messages: int = MAX_MESSAGES_TO_PROCESS) -> int:
         """
@@ -62,11 +66,11 @@ class RuleProcessorService:
             # Get matching emails from database with pagination
             emails = self.db_service.get_matching_emails(rule, offset=offset, limit=max_messages)
             
-            print(f"Found {len(emails)} messages matching rule conditions from database...")
+            logger.info(f"Found {len(emails)} messages matching rule conditions from database...")
             
             # Break if no more emails to process
             if len(emails) == 0:
-                print("No more emails matching rule conditions")
+                logger.info("No more emails matching rule conditions")
                 break
             
             matching_message_ids = []
@@ -82,7 +86,7 @@ class RuleProcessorService:
             if matching_message_ids:
                 self.apply_actions(matching_message_ids, rule.actions)
             
-            print(f"Processed {len(emails)} emails")
+            logger.info(f"Processed {len(emails)} emails")
             total_processed += len(emails)
             
             # Update offset for next page
@@ -104,16 +108,16 @@ class RuleProcessorService:
         rules = load_rules_from_file(rules_path)
         total_processed = 0
         
-        print(f"Processing {len(rules)} rules from {rules_path}")
+        logger.info(f"Processing {len(rules)} rules from {rules_path}")
         
         for i, rule in enumerate(rules, 1):
             rule_name = rule.name or f"Rule {i}"
-            print(f"\n--- Processing {rule_name} ({i}/{len(rules)}) ---")
+            logger.info(f"--- Processing {rule_name} ({i}/{len(rules)}) ---")
             
             processed_count = self.process_emails_with_rules(rule, max_messages)
             total_processed += processed_count
             
-            print(f"Completed {rule_name}: {processed_count} emails processed")
+            logger.info(f"Completed {rule_name}: {processed_count} emails processed")
         
         return total_processed
     
@@ -144,7 +148,7 @@ def main() -> None:
     # Create service and process
     service = RuleProcessorService()
     total_processed = service.process_rules_from_file(rules_path)
-    print(f"\nTotal emails processed across all rules: {total_processed}")
+    logger.info(f"Total emails processed across all rules: {total_processed}")
 
 
 if __name__ == "__main__":

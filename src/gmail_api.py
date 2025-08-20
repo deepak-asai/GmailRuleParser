@@ -11,6 +11,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
+from src.logging_config import get_logger
+
+# Set up logger for this module
+logger = get_logger(__name__)
 
 
 # Read-only scope is sufficient to list and read messages
@@ -80,7 +84,7 @@ class GmailApiService:
                     try:
                         results[request_id] = self._parse_message_for_rules(response)
                     except Exception:
-                        print(f"Error parsing message {request_id}")
+                        logger.error(f"Error parsing message {request_id}")
                         pass
             
             for mid in ids:

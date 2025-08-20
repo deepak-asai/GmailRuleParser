@@ -4,6 +4,10 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Iterable, List, Literal, Optional
+from src.logging_config import get_logger
+
+# Set up logger for this module
+logger = get_logger(__name__)
 
 
 FieldName = Literal["From", "To", "Subject", "Message", "Received"]
@@ -57,12 +61,3 @@ def load_rules_from_file(path: str) -> List[Rule]:
         rules.append(rule)
     
     return rules
-
-def load_single_rule_from_file(path: str) -> Rule:
-    """Load a single rule from file (for backward compatibility)"""
-    rules = load_rules_from_file(path)
-    if len(rules) == 0:
-        raise ValueError("No rules found in file")
-    if len(rules) > 1:
-        print(f"Warning: Multiple rules found in file, using first rule: {rules[0].name}")
-    return rules[0]

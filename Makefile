@@ -32,12 +32,15 @@ psql:
 process_rules:
 	$(PY) -m src.process_rules -r src/rules.json
 
-reset-db:
+reset:
 	$(PY) -m src.reset_db
 
-setup-db:
+setup:
 	$(PY) -m src.setup_db
 
 test:
 	./run_tests.sh
+
+process_emails:
+	$(PY) -m src.main
 

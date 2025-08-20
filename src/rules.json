@@ -3,7 +3,8 @@
     "name": "rule1",
     "predicate": "All",
     "conditions": [
-      { "field": "From", "predicate": "Contains", "value": "zomato" }
+      { "field": "From", "predicate": "Contains", "value": "zomato" },
+      { "field": "Received", "predicate": "LessThanDays", "value": 3 }
     ],
     "actions": [{ "move": "zomato" }]
   },
@@ -12,7 +13,8 @@
     "predicate": "Any",
     "conditions": [
       { "field": "Subject", "predicate": "Contains", "value": "newsletter" },
-      { "field": "From", "predicate": "Contains", "value": "newsletter" }
+      { "field": "From", "predicate": "Contains", "value": "newsletter" },
+      { "field": "Message", "predicate": "Contains", "value": "newsletter" }
     ],
     "actions": [{ "move": "newsletters" }, { "mark": "read" }]
   }

@@ -4,7 +4,7 @@ import argparse
 from typing import List
 
 from src.gmail_api import GmailApiService
-from .rules import load_rules_from_file, Rule
+from .rules import load_rules_from_file, load_single_rule_from_file, Rule
 from .storage import DatabaseService
 
 MAX_MESSAGES_TO_PROCESS = 20
@@ -90,9 +90,36 @@ class RuleProcessorService:
         
         return total_processed
     
+    def process_all_rules_from_file(self, rules_path: str, max_messages: int = MAX_MESSAGES_TO_PROCESS) -> int:
+        """
+        Load all rules from file and process emails for each rule.
+        
+        Args:
+            rules_path: Path to rules JSON file
+            max_messages: Maximum messages to process per batch
+            
+        Returns:
+            Total number of emails processed across all rules
+        """
+        rules = load_rules_from_file(rules_path)
+        total_processed = 0
+        
+        print(f"Processing {len(rules)} rules from {rules_path}")
+        
+        for i, rule in enumerate(rules, 1):
+            rule_name = rule.name or f"Rule {i}"
+            print(f"\n--- Processing {rule_name} ({i}/{len(rules)}) ---")
+            
+            processed_count = self.process_emails_with_rules(rule, max_messages)
+            total_processed += processed_count
+            
+            print(f"Completed {rule_name}: {processed_count} emails processed")
+        
+        return total_processed
+    
     def process_rules_from_file(self, rules_path: str, max_messages: int = MAX_MESSAGES_TO_PROCESS) -> int:
         """
-        Load rules from file and process emails.
+        Load rules from file and process emails (backward compatibility - processes all rules).
         
         Args:
             rules_path: Path to rules JSON file
@@ -101,8 +128,7 @@ class RuleProcessorService:
         Returns:
             Total number of emails processed
         """
-        rule = load_rules_from_file(rules_path)
-        return self.process_emails_with_rules(rule, max_messages)
+        return self.process_all_rules_from_file(rules_path, max_messages)
 
 
 def main() -> None:
@@ -118,7 +144,7 @@ def main() -> None:
     # Create service and process
     service = RuleProcessorService()
     total_processed = service.process_rules_from_file(rules_path)
-    print(f"Total emails processed: {total_processed}")
+    print(f"\nTotal emails processed across all rules: {total_processed}")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,19 @@
-{
-  "name": "rule1",
-  "predicate": "All",
-  "conditions": [
-    { "field": "Received", "predicate": "LessThanDays", "value": "10" },
-    { "field": "From", "predicate": "Contains", "value": "agoda" }
-  ],
-  "actions": [{ "mark": "read" }, { "move": "INBOX" }]
-}
+[
+  {
+    "name": "rule1",
+    "predicate": "All",
+    "conditions": [
+      { "field": "From", "predicate": "Contains", "value": "zomato" }
+    ],
+    "actions": [{ "move": "zomato2" }]
+  },
+  {
+    "name": "rule2",
+    "predicate": "Any",
+    "conditions": [
+      { "field": "Subject", "predicate": "Contains", "value": "newsletter" },
+      { "field": "From", "predicate": "Contains", "value": "newsletter" }
+    ],
+    "actions": [{ "move": "newsletters" }, { "mark": "read" }]
+  }
+]

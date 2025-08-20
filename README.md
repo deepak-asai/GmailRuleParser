@@ -38,6 +38,25 @@ make up          # start db
 make down        # stop all
 make run         # run main
 make psql        # psql into container
+make test        # run all tests
+```
+
+### Testing
+
+Run all tests in the correct order to avoid mock interference:
+
+```bash
+./run_tests.sh
+```
+
+Or run tests individually:
+
+```bash
+# Integration tests (require PostgreSQL)
+python3 -m pytest tests/test_store_emails_postgres_integration.py -v
+
+# Unit tests
+python3 -m pytest tests/test_gmail_api.py tests/test_process_rules.py tests/test_storage.py tests/test_store_emails.py -v
 ```
 
 ### Rules engine

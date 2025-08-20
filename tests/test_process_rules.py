@@ -313,7 +313,7 @@ class TestRuleProcessorService:
             actions=[{"mark": "read"}]
         )
         
-        mock_load_rules.return_value = rule
+        mock_load_rules.return_value = [rule]  # Return list of rules
         
         # Create mock email
         mock_email = Mock()
@@ -352,7 +352,7 @@ class TestRuleProcessorService:
             actions=[{"mark": "read"}]
         )
         
-        mock_load_rules.return_value = rule
+        mock_load_rules.return_value = [rule]  # Return list of rules
         
         # Create mock email
         mock_email = Mock()

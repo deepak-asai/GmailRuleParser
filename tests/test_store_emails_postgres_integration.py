@@ -30,9 +30,10 @@ class TestEmailStoreServicePostgresIntegration:
             DatabaseService.__wrapped__.instances = {}
         
         # Create database service with test database
-        with patch('src.storage.get_settings') as mock_settings:
-            mock_settings.return_value.database_url = self.database_url
-            self.db_service = DatabaseService()
+        self.mock_settings_patcher = patch('src.storage.get_settings')
+        self.mock_settings = self.mock_settings_patcher.start()
+        self.mock_settings.return_value.database_url = self.database_url
+        self.db_service = DatabaseService()
         
         # Create database schema
         self.db_service.ensure_schema()

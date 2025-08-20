@@ -38,4 +38,5 @@ reset-db:
 setup-db:
 	$(PY) -m src.setup_db
 
-
+run-tests:
+	$(PY) -m pytest -v
